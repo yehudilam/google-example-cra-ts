@@ -1,43 +1,21 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { createContext, useContext } from 'react';
 import './App.css';
+import { BrowserRouter } from "react-router-dom";
+import AppRouter from './router/AppRouter';
+import { WorkerContext } from './context/WorkerContext';
+import useSetupWorker from './hooks/useSetupworker';
 
 function App() {
-  const w = new Worker(new URL('sqlite-worker.js?sqlite3.dir=jswasm', import.meta.url), {
-    type: 'module',
-  });
+  const { worker } = useSetupWorker();
 
-  w.onmessage = function ({ data }) {
-    switch (data.type) {
-      case 'log':
-        // logHtml(data.payload.cssClass, ...data.payload.args);
-        
-        console.log(data.payload.cssClass, ...data.payload.args);
-        break;
-      default:
-        // logHtml('error', 'Unhandled message:', data.type);
-
-        console.error(data.payload.cssClass, ...data.payload.args);
-    }
-  };
+  console.log('app loaded');
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <WorkerContext.Provider value={{ worker }}>
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    </WorkerContext.Provider>
   );
 }
 
