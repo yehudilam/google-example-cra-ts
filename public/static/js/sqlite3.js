@@ -7738,8 +7738,7 @@ var sqlite3InitModule = (() => {
           wasm.installFunction('i(ippp)', function(t,c,p,x){
             if(capi.SQLITE_TRACE_STMT===t){
               
-              console.log("SQL TRACE #"+(++this.counter),
-                          wasm.cstringToJs(x));
+              // console.log("SQL TRACE #"+(++this.counter), wasm.cstringToJs(x));
             }
           }.bind({counter: 0}));
   

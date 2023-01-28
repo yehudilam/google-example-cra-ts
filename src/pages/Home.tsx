@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import BusRouteList from "../components/BusRouteList/BusRouteList";
 import { GET_ROUTES } from "../constants/WorkerMessageTypes";
 import { useWorker } from "../context/WorkerContext";
 
@@ -11,14 +13,20 @@ const Home = () => {
     });
   };
 
+  // useEffect(() => {
+  //   console.log('routes changed [app.tsx]', routes);
+  // }, [routes]);
+
   return (
     <div>
       route data here:
 
-      <button onClick={() => {
+      <button className="btn btn-blue" onClick={() => {
         console.log('clicking me');
         clickMe();
       }}>Click me</button>
+
+      <BusRouteList />
     </div>
   );
 };

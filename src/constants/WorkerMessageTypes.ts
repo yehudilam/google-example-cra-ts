@@ -1,3 +1,6 @@
 
 export const GET_ROUTES = 'GET_ROUTES';
 export const GET_ROUTES_RESULT = 'GET_ROUTES_RESULT';
+
+export const GET_ROUTE_STOPS = 'GET_ROUTE_STOPS';
+export const GET_ROUTE_STOP_RESULT = 'GET_ROUTE_STOP_RESULT';

@@ -1,5 +1,5 @@
-import parseRouteData from "./utils/xmlParser";
-import { GET_ROUTES, GET_ROUTES_RESULT } from './constants/WorkerMessageTypes';
+import {parseRouteData, parseRouteStopData} from "./utils/xmlParser";
+import { GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
 
@@ -25,7 +25,23 @@ const fetchInsertBusRoutes = async (db) => {
       bind: [routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time],
     })
   }
+
+  // const routeStops = await parseRouteStopData();
 };
+
+const fetchInsertRouteStops = async (db) => {
+  const routeStops = await parseRouteStopData();
+
+  for(let i = 0; i < routeStops.length; i++){
+    // todo: batch
+    const { routeid, stopid, stopseq, routedir, stopc} = routeStops[i];
+
+    db.exec({
+      sql: 'insert into rstop2 (routeid, stopid, stopseq, routedir, stopc) values (?, ?, ?, ?, ?)',
+      bind: [routeid, stopid, stopseq, routedir, stopc]
+    });
+  }
+}
 
 let db;
 
@@ -63,14 +79,25 @@ const start = async function (sqlite3) {
     );
     `);
 
-    await fetchInsertBusRoutes(db);
+    db.exec(`CREATE TABLE IF NOT EXISTS rstop2 (
+      routeid INTEGER NOT NULL,
+      stopid INTEGER NOT NULL,
+      stopseq INTEGER NOT NULL,
+      routedir INTEGER NOT NULL,
+      stopc TEXT NOT NULL
+    )`);
 
+    await fetchInsertBusRoutes(db);
+    await fetchInsertRouteStops(db);
+
+    /*
     db.exec({
       sql: 'select count(*) from busfare3a',
       callback: function (row) {
         log('row ', row)
       }.bind({ counter: 0 }),
     });
+    */
 
   } finally {
     // db.close();
@@ -115,35 +142,41 @@ onmessage = (e) => {
   console.log('on message', e);
   
   if (e?.data?.type === GET_ROUTES) {
-    console.log('getting routes');
-
-    // const capi = sqlite3Instance.capi; /*C-style API*/
-    // const oo = sqlite3Instance.oo1; /*high-level OO API*/
-    // log('sqlite3 version', capi.sqlite3_libversion(), capi.sqlite3_sourceid());
-    // let db;
-
-    // if (sqlite3Instance.opfs) {
-    //   db = new sqlite3Instance.opfs.OpfsDb('/mydb.sqlite3');
-    //   log('The OPFS is available.');
-    // } else {
-    //   db = new oo.DB('/mydb.sqlite3', 'ct');
-    //   log('The OPFS is not available.');
-    // }
+    const results = [];
 
     db.exec({
       sql: 'select * from busfare3a limit 20;',
       rowMode: 'object',
-      callback: function (row) {
-        console.log('call back post message', row);
+      returnValue: "resultRows",
 
-        postMessage({
-          type: GET_ROUTES_RESULT,
-          data: row,
-        })
+      callback: function (row) {
+        results.push(row);
       }.bind({ counter: 0 }),
-      resultRows: function(row){
-        console.log('result row', row);
+      
+    });
+
+    postMessage({
+      type: GET_ROUTES_RESULT,
+      data: results,
+    });
+  }else if (e?.data?.type === GET_ROUTE_STOPS){
+    const results = [];
+    const { routeid, routedir } = e?.data?.variables;
+
+    db.exec({
+      sql: 'SELECT * FROM rstop2 WHERE routeid=? AND routedir=?',
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [routeid, routedir],
+      callback: function(row){
+        results.push(row)
       }
+    });
+
+    postMessage({
+      type: GET_ROUTE_STOP_RESULT,
+      data: results,
+      mapKey: `${routeid}-${routedir}`
     });
   }
 }

@@ -50,12 +50,16 @@ const nameMap: NameMapType[] = [
   },
 ];
 
-// list of routes:
-const parseRouteData = async () => {
-  const response = await fetch(BUS_ROUTES_XML);
+const fetchXmlString = async (url: string) => {
+  const response = await fetch(url);
   const xmlString = await response.text();
 
-  const res = convert.xml2js(xmlString);
+  return convert.xml2js(xmlString);
+}
+
+// list of routes:
+const parseRouteData = async () => {
+  const res = await fetchXmlString(BUS_ROUTES_XML)
 
   const data = res.elements[0].elements.map((item: any) => {
     // name: "ROUTE",
@@ -69,13 +73,45 @@ const parseRouteData = async () => {
     }, {});
   });
 
-  console.log('xml parser data', data);
+  // console.log('xml parser data', data);
 
   return data;
 };
 
+const BUS_ROUTE_STOP_XML = 'https://static.data.gov.hk/td/routes-fares-xml/RSTOP_BUS.xml';
+const BUS_ROUTE_STOP_JSON = 'https://static.data.gov.hk/td/routes-fares-geojson/JSON_BUS.json';
+
 // list of route-stops
+const parseRouteStopData = async () => {
+  // const res = await fetchXmlString(BUS_ROUTE_STOP_XML)
+  // console.log('route stop res', res);
+
+  // const data = res.elements[0].elements.map((item: any) => {
+
+  // });
+
+  const response = await fetch(BUS_ROUTE_STOP_JSON);
+  const json = await response.json();
+
+  console.log('route stop json', json);
+
+  return json.features.map((feat: any) => {
+    const {
+      properties: {
+        routeId, stopSeq, routeSeq: routedir,
+        stopId, stopNameC: stopc,
+      }
+    } = feat;
+
+    return {
+      routeid: routeId,
+      stopseq: stopSeq,
+      routedir, stopc,
+      stopid: stopId,
+    };
+  });
+}
 
 // list of coors
 
-export default parseRouteData;
+export {parseRouteData, parseRouteStopData};
