@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import { BusRouteStopType } from "../../model/BusRouteStopType";
 
 // interface BusRouteStopProps{
@@ -16,7 +17,9 @@ const BusRouteStop = ({
   return (
     <div className="flex">
       <div>{stopseq}</div>
-      <div>({stopid})</div>
+      <div>
+        <NavLink to={`/stop/${stopid}`}>({stopid})</NavLink>
+      </div>
       <div>{stopc}</div>
     </div>
     );

@@ -83,13 +83,6 @@ const BUS_ROUTE_STOP_JSON = 'https://static.data.gov.hk/td/routes-fares-geojson/
 
 // list of route-stops
 const parseRouteStopData = async () => {
-  // const res = await fetchXmlString(BUS_ROUTE_STOP_XML)
-  // console.log('route stop res', res);
-
-  // const data = res.elements[0].elements.map((item: any) => {
-
-  // });
-
   const response = await fetch(BUS_ROUTE_STOP_JSON);
   const json = await response.json();
 

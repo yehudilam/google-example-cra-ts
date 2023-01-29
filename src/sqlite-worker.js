@@ -1,5 +1,5 @@
 import {parseRouteData, parseRouteStopData} from "./utils/xmlParser";
-import { GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT } from './constants/WorkerMessageTypes';
+import { GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
 
@@ -177,6 +177,45 @@ onmessage = (e) => {
       type: GET_ROUTE_STOP_RESULT,
       data: results,
       mapKey: `${routeid}-${routedir}`
+    });
+  }else if(e?.data?.type === SEARCH_ROUTE_BY_NAME){
+    const results = [];
+    const { routec } = e?.data?.variables;
+
+    db.exec({
+      sql: "SELECT * FROM busfare3a where routec LIKE ?",
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [`%${routec}%`],
+      callback: function(row){
+        results.push(row);
+      }
+    });
+
+    console.log('to post SEARCH_ROUTE_BY_NAME_RESULT', results);
+
+    postMessage({
+      type: SEARCH_ROUTE_BY_NAME_RESULT,
+      data: results,
+    });
+  } else if (e?.data?.type === GET_STOP_ROUTES){
+    const results = [];
+    const { stopid } = e?.data?.variables;
+    
+    // todo: distinct routec
+    db.exec({
+      sql: "SELECT a.*, b.routec, b.startc, b.destinc FROM rstop2 as a join busfare3a as b on a.routeid=b.routeid where a.stopid=?",
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [stopid],
+      callback: function(row){
+        results.push(row);
+      }
+    });
+
+    postMessage({
+      type: GET_STOP_ROUTES_RESULT,
+      data: results,
     });
   }
 }

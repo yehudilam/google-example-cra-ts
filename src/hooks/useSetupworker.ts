@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT } from "../constants/WorkerMessageTypes";
+import { GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, GET_STOP_ROUTES_RESULT, SEARCH_ROUTE_BY_NAME_RESULT } from "../constants/WorkerMessageTypes";
 
 const useSetupWorker = () => {
   const [worker, setWorker] = useState<any>(undefined);
 
   const [routes, setRoutes] = useState([]);
-
   const [routeStopMap, setRouteStopMap] = useState<Record<string, any>>({});
 
   useEffect(() => {
@@ -36,6 +35,15 @@ const useSetupWorker = () => {
             [data.mapKey]: data.data,
           }))
 
+          break;
+        case SEARCH_ROUTE_BY_NAME_RESULT:
+          setRoutes(data.data);
+
+          break;
+
+        case GET_STOP_ROUTES_RESULT:
+          setRoutes(data.data);
+          
           break;
         default:
           // logHtml('error', 'Unhandled message:', data.type);

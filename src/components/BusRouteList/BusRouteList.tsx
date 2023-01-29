@@ -4,7 +4,7 @@ import useSetupWorker from "../../hooks/useSetupworker";
 import BusRoute from "./BusRoute";
 
 const BusRouteList = () => {
-  const { data: { routes} } = useWorker();
+  const { data: { routes } } = useWorker();
 
   // useEffect(() => {
     // console.log('route list', routes);

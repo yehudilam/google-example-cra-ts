@@ -9,9 +9,9 @@ const BusRouteListTwoWayList = ({
 }: BusRouteListTwoWayListProps) => {
 
   return (
-    <div>
+    <div className="flex">
       {[1, 2].map(routedir => (
-        <BusRouteStopList routeid={routeid} routedir={routedir} />
+        <BusRouteStopList key={`${routeid}-${routedir}`} routeid={routeid} routedir={routedir} />
       ))}
     </div>
   );
