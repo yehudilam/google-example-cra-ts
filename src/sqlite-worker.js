@@ -1,7 +1,42 @@
-import {parseRouteData, parseRouteStopData} from "./utils/xmlParser";
+import { parseRouteData, parseRouteStopData } from "./utils/xmlParser";
 import { GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
+
+const checkDbFileExistance = async () => {
+  console.log('checkDbFileExistance');
+
+  try {
+    const root = await navigator.storage.getDirectory();
+
+    for await (const handle of root.values()) {
+      console.log('handle', handle);
+
+      if (handle.kind === "directory") {
+        // directoryNames.push(handle.name);
+        console.log('handle.name', handle.name);
+      }
+    }
+
+    await root.getFileHandle("Draft.txt", { "create" : true });
+
+    const fileHandle = await root.getFileHandle("mydb.sqlite3");
+
+    console.log('fileHandle', fileHandle);
+
+    // Create FileSystemSyncAccessHandle on the file.
+    const accessHandle = await fileHandle.createSyncAccessHandle();
+    // Get size of the file.
+    const fileSize = await accessHandle.getSize();
+
+    console.log('file size');
+  } catch (e) {
+    console.error('check file error', e);
+  }
+}
+
+console.log('worker: check file existance');
+checkDbFileExistance();
 
 const logHtml = function (cssClass, ...args) {
   postMessage({
@@ -32,9 +67,9 @@ const fetchInsertBusRoutes = async (db) => {
 const fetchInsertRouteStops = async (db) => {
   const routeStops = await parseRouteStopData();
 
-  for(let i = 0; i < routeStops.length; i++){
+  for (let i = 0; i < routeStops.length; i++) {
     // todo: batch
-    const { routeid, stopid, stopseq, routedir, stopc} = routeStops[i];
+    const { routeid, stopid, stopseq, routedir, stopc } = routeStops[i];
 
     db.exec({
       sql: 'insert into rstop2 (routeid, stopid, stopseq, routedir, stopc) values (?, ?, ?, ?, ?)',
@@ -139,7 +174,7 @@ self
 
 onmessage = (e) => {
   console.log('on message', e);
-  
+
   if (e?.data?.type === GET_ROUTES) {
     const results = [];
 
@@ -151,14 +186,14 @@ onmessage = (e) => {
       callback: function (row) {
         results.push(row);
       }.bind({ counter: 0 }),
-      
+
     });
 
     postMessage({
       type: GET_ROUTES_RESULT,
       data: results,
     });
-  }else if (e?.data?.type === GET_ROUTE_STOPS){
+  } else if (e?.data?.type === GET_ROUTE_STOPS) {
     const results = [];
     const { routeid, routedir } = e?.data?.variables;
 
@@ -167,7 +202,7 @@ onmessage = (e) => {
       rowMode: 'object',
       returnValue: 'resultRows',
       bind: [routeid, routedir],
-      callback: function(row){
+      callback: function (row) {
         results.push(row)
       }
     });
@@ -177,7 +212,7 @@ onmessage = (e) => {
       data: results,
       mapKey: `${routeid}-${routedir}`
     });
-  }else if(e?.data?.type === SEARCH_ROUTE_BY_NAME){
+  } else if (e?.data?.type === SEARCH_ROUTE_BY_NAME) {
     const results = [];
     const { routec } = e?.data?.variables;
 
@@ -186,7 +221,7 @@ onmessage = (e) => {
       rowMode: 'object',
       returnValue: 'resultRows',
       bind: [`%${routec}%`],
-      callback: function(row){
+      callback: function (row) {
         results.push(row);
       }
     });
@@ -197,17 +232,17 @@ onmessage = (e) => {
       type: SEARCH_ROUTE_BY_NAME_RESULT,
       data: results,
     });
-  } else if (e?.data?.type === GET_STOP_ROUTES){
+  } else if (e?.data?.type === GET_STOP_ROUTES) {
     const results = [];
     const { stopid } = e?.data?.variables;
-    
+
     // todo: distinct routec
     db.exec({
       sql: "SELECT a.*, b.routec, b.startc, b.destinc FROM rstop2 as a join busfare3a as b on a.routeid=b.routeid where a.stopid=?",
       rowMode: 'object',
       returnValue: 'resultRows',
       bind: [stopid],
-      callback: function(row){
+      callback: function (row) {
         results.push(row);
       }
     });
@@ -216,7 +251,7 @@ onmessage = (e) => {
       type: GET_STOP_ROUTES_RESULT,
       data: results,
     });
-  }else if(e?.data?.type === GET_ROUTE){
+  } else if (e?.data?.type === GET_ROUTE) {
     let routeDetail = undefined;
     const { routeid } = e?.data?.variables;
 
@@ -225,12 +260,12 @@ onmessage = (e) => {
       rowMode: 'object',
       returnValue: 'resultRows',
       bind: [routeid],
-      callback: function(row){
+      callback: function (row) {
         routeDetail = row;
       }
     });
 
-    if(!routeDetail){
+    if (!routeDetail) {
       // error
       return postMessage({
         type: GET_ROUTE_RESULT,
@@ -238,14 +273,14 @@ onmessage = (e) => {
       });
     }
 
-    const routedir=[[], []];
+    const routedir = [[], []];
 
     db.exec({
       sql: 'SELECT * FROM rstop2 WHERE routeid=? AND routedir=?',
       rowMode: 'object',
       returnValue: 'resultRows',
       bind: [routeid, 1],
-      callback: function(row){
+      callback: function (row) {
         routedir[0].push(row)
       }
     });
@@ -255,7 +290,7 @@ onmessage = (e) => {
       rowMode: 'object',
       returnValue: 'resultRows',
       bind: [routeid, 2],
-      callback: function(row){
+      callback: function (row) {
         routedir[1].push(row)
       }
     });
