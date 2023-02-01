@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React from 'react';
 import './index.css';
 import { BrowserRouter } from "react-router-dom";
 import AppRouter from './router/AppRouter';
@@ -7,12 +7,6 @@ import useSetupWorker from './hooks/useSetupworker';
 
 function App() {
   const { worker, route, routes, routeStopMap } = useSetupWorker();
-
-  // console.log('app loaded');
-
-  // useEffect(() => {
-  //   console.log('routes changed [app.tsx]', routes);
-  // }, [routes]);
 
   return (
     <WorkerContext.Provider value={{ 

@@ -12,6 +12,8 @@ const AppRouter = () => {
         <Route path="/route/id/:routeid" element={<BusRoutePageById />} />
         {/* <Route path="/route/id/:routeName" element={<BusRouteByName routec={routeName} />} /> */}
         <Route path="/stop/:stopid" element={<BusStop />} />
+
+        {/* bus stops near me */}
       </Route>
     </Routes>
   );

@@ -67,10 +67,6 @@ const useSetupWorker = () => {
     // return: remove on message(?)
   }, []);
 
-  // useEffect(() => {
-  //   console.log('hook for routes change', routes);
-  // }, [routes]);
-
   return {
     worker,
     routes,

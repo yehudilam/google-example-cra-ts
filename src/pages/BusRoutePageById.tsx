@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import BusRoute from "../components/BusRouteList/BusRoute";
 import BusRouteDetails from "../components/BusRouteList/BusRouteDetails";
 import { GET_ROUTE } from "../constants/WorkerMessageTypes";
 import { useWorker } from "../context/WorkerContext";

@@ -114,7 +114,6 @@ if (urlParams.has('sqlite3.dir')) {
   sqlite3Js = urlParams.get('sqlite3.dir') + '/' + sqlite3Js;
 }
 
-// console.log('urlParams', urlParams, 'sqlite3Js', sqlite3Js);
 
 /* eslint-disable-next-line no-undef */
 importScripts(sqlite3Js);

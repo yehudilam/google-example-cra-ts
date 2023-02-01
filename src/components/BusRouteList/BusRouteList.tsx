@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { useWorker } from "../../context/WorkerContext";
 import BusRoute from "./BusRoute";
@@ -6,7 +6,7 @@ import BusRoute from "./BusRoute";
 const BusRouteList = () => {
   const { data: { routes } } = useWorker();
 
-  console.log('routes', routes);
+  // console.log('routes', routes);
 
   return (
     <div>
