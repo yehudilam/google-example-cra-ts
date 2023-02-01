@@ -1,5 +1,5 @@
 import {parseRouteData, parseRouteStopData} from "./utils/xmlParser";
-import { GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT } from './constants/WorkerMessageTypes';
+import { GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
 
@@ -217,5 +217,56 @@ onmessage = (e) => {
       type: GET_STOP_ROUTES_RESULT,
       data: results,
     });
+  }else if(e?.data?.type === GET_ROUTE){
+    let routeDetail = undefined;
+    const { routeid } = e?.data?.variables;
+
+    db.exec({
+      sql: "SELECT * FROM busfare3a where routeid=? limit 1",
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [routeid],
+      callback: function(row){
+        routeDetail = row;
+      }
+    });
+
+    if(!routeDetail){
+      // error
+      return postMessage({
+        type: GET_ROUTE_RESULT,
+        error: 'ROUTE_NOT_FOUND',
+      });
+    }
+
+    const routedir=[[], []];
+
+    db.exec({
+      sql: 'SELECT * FROM rstop2 WHERE routeid=? AND routedir=?',
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [routeid, 1],
+      callback: function(row){
+        routedir[0].push(row)
+      }
+    });
+
+    db.exec({
+      sql: 'SELECT * FROM rstop2 WHERE routeid=? AND routedir=?',
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [routeid, 2],
+      callback: function(row){
+        routedir[1].push(row)
+      }
+    });
+
+    postMessage({
+      type: GET_ROUTE_RESULT,
+      data: {
+        ...routeDetail,
+        stops: routedir,
+      }
+    })
   }
 }

@@ -6,18 +6,18 @@ import { WorkerContext } from './context/WorkerContext';
 import useSetupWorker from './hooks/useSetupworker';
 
 function App() {
-  const { worker, routes, routeStopMap } = useSetupWorker();
+  const { worker, route, routes, routeStopMap } = useSetupWorker();
 
-  console.log('app loaded');
+  // console.log('app loaded');
 
-  useEffect(() => {
-    console.log('routes changed [app.tsx]', routes);
-  }, [routes]);
+  // useEffect(() => {
+  //   console.log('routes changed [app.tsx]', routes);
+  // }, [routes]);
 
   return (
     <WorkerContext.Provider value={{ 
       worker,
-      data: { routes, routeStopMap }
+      data: { route, routes, routeStopMap }
     }}>
       <BrowserRouter>
         <AppRouter />

@@ -1,17 +1,12 @@
 import React, { useEffect } from "react";
+import { NavLink } from "react-router-dom";
 import { useWorker } from "../../context/WorkerContext";
-import useSetupWorker from "../../hooks/useSetupworker";
 import BusRoute from "./BusRoute";
 
 const BusRouteList = () => {
   const { data: { routes } } = useWorker();
 
-  // useEffect(() => {
-    // console.log('route list', routes);
-  // }, [routes]);
-
   console.log('routes', routes);
-
 
   return (
     <div>
@@ -20,7 +15,11 @@ const BusRouteList = () => {
         routes && (
           routes?.length !== 0 && (
             <div>
-              {routes.map((route: any) => <BusRoute route={route} />)}
+              {routes.map((route: any) => (
+                <NavLink to={`/route/id/${route.routeid}`}>
+                  <BusRoute route={route} />
+                </NavLink>
+              ))}
             </div>
           )
         )

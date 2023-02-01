@@ -1,4 +1,7 @@
 
+export const GET_ROUTE = 'GET_ROUTE';
+export const GET_ROUTE_RESULT = 'GET_ROUTE_RESULT';
+
 export const GET_ROUTES = 'GET_ROUTES';
 export const GET_ROUTES_RESULT = 'GET_ROUTES_RESULT';
 

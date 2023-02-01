@@ -6,3 +6,7 @@ export interface BusRouteStopType {
   stopseq: number;
   stopc: string;
 }
+
+export interface BusRouteStopByDirectionType {
+  stops: BusRouteStopType[];
+}
