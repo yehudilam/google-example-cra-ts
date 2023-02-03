@@ -18,25 +18,13 @@ const checkDbFileExistance = async () => {
       }
     }
 
-    await root.getFileHandle("Draft.txt", { "create" : true });
-
-    const fileHandle = await root.getFileHandle("mydb.sqlite3");
-
-    console.log('fileHandle', fileHandle);
-
-    // Create FileSystemSyncAccessHandle on the file.
-    const accessHandle = await fileHandle.createSyncAccessHandle();
-    // Get size of the file.
-    const fileSize = await accessHandle.getSize();
-
-    console.log('file size');
   } catch (e) {
     console.error('check file error', e);
   }
 }
 
-console.log('worker: check file existance');
-checkDbFileExistance();
+// console.log('worker: check file existance');
+// checkDbFileExistance();
 
 const logHtml = function (cssClass, ...args) {
   postMessage({

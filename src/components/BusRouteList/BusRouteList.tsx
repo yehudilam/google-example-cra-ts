@@ -6,24 +6,16 @@ import BusRoute from "./BusRoute";
 const BusRouteList = () => {
   const { data: { routes } } = useWorker();
 
-  // console.log('routes', routes);
-
   return (
     <div>
       <h1>Bus routes: </h1>
-      {
-        routes && (
-          routes?.length !== 0 && (
-            <div>
-              {routes.map((route: any) => (
-                <NavLink to={`/route/id/${route.routeid}`}>
-                  <BusRoute route={route} />
-                </NavLink>
-              ))}
-            </div>
-          )
-        )
-      }
+      <div>
+        {routes?.map((route: any) => (
+          <NavLink to={`/route/id/${route.routeid}`}>
+            <BusRoute route={route} />
+          </NavLink>
+        ))}
+      </div>
     </div>
   )
 };

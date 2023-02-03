@@ -8996,6 +8996,8 @@ var sqlite3InitModule = (() => {
         opfsVfs.dispose();
         return promiseReject_(err);
       };
+
+      console.log(`%c new worker, sqlite3.js: ${options.proxyUri}`, 'background: #222; color: #bada55');
       const W = new Worker(options.proxyUri);
       W._originalOnError = W.onerror ;
       W.onerror = function(err){

@@ -8,7 +8,8 @@ const Layout = () => {
       <nav>
         <ul>
           <li>
-            <Link to="/">Home</Link>
+            {/* todo manually start loading worker: */}
+            <button>Load worker</button>
           </li>
           <li>
             <Link to="/about">About</Link>

@@ -79,4 +79,6 @@ const useSetupWorker = () => {
   };
 };
 
-export default useSetupWorker;
+const nothing = '';
+
+export default nothing;
