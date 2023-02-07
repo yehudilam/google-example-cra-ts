@@ -1,7 +1,8 @@
 import { parseRouteData, parseRouteStopData } from "./utils/xmlParser";
 import {
   GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, LIST_FILES, FETCH_TRANSPORT_DATA,
-  GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT
+  GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT,
+  DATA_COUNT,
 } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
@@ -16,7 +17,7 @@ const checkDbFileExistance = async () => {
       console.log(
         'handle', 
         handle,
-        handle.kind === "directory" ? handle.name : [handle.getFile(), handle.getFile()?.size]
+        handle.kind === "directory" ? handle.name : [await handle.getFile(), (await handle.getFile())?.size]
         );
     }
 
@@ -83,7 +84,7 @@ const start = async function (sqlite3) {
   try {
     log('Create a table...');
     // db.exec('CREATE TABLE IF NOT EXISTS t(a,b)');
-    db.exec('DROP TABLE IF EXISTS busfare3a;');
+    // db.exec('DROP TABLE IF EXISTS busfare3a;');
 
     db.exec(`CREATE TABLE IF NOT EXISTS busfare3a (
       routeid INTEGER PRIMARY KEY,
@@ -283,6 +284,9 @@ onmessage = async (e) => {
   } else if (e?.data?.type === FETCH_TRANSPORT_DATA) {
     await fetchInsertBusRoutes(db);
     await fetchInsertRouteStops(db);
+  } else if (e?.data?.type === DATA_COUNT){
+    routeStopsCount(db);
+    routesCount(db);
   }
 }
 

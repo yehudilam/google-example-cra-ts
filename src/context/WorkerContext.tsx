@@ -14,8 +14,8 @@ interface WorkerContextType {
 
 export const WorkerContext = createContext<WorkerContextType>({
   // worker: null
-  setUpWorker: () => {},
-  terminateWorker: () => {},
+  setUpWorker: () => { },
+  terminateWorker: () => { },
   data: {},
 });
 
@@ -97,7 +97,7 @@ export const WorkerProvider = ({
   //       w.terminate();
   //       return undefined;
   //     });
-      
+
   //   };
   // }, [
   //   onMessage, 
@@ -105,20 +105,20 @@ export const WorkerProvider = ({
   // ]);
 
   const setUpWorker = () => {
-    if(!worker){
+    if (!worker) {
       const w = new Worker(new URL('../sqlite-worker.js?sqlite3.dir=jswasm', import.meta.url), {
         type: 'module',
       });
-  
+
       w.onmessage = onMessage;
-  
+
       setWorker(w);
     }
   };
 
   const terminateWorker = () => {
     setWorker(undefined);
-      worker.terminate();
+    worker.terminate();
   }
 
   return (
@@ -128,7 +128,7 @@ export const WorkerProvider = ({
         route, routes,
         routeStopMap,
       },
-      setUpWorker, 
+      setUpWorker,
       terminateWorker,
     }}>
       {children}

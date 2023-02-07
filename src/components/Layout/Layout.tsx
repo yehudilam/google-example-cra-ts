@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { FETCH_TRANSPORT_DATA, LIST_FILES } from "../../constants/WorkerMessageTypes";
+import { DATA_COUNT, FETCH_TRANSPORT_DATA, LIST_FILES } from "../../constants/WorkerMessageTypes";
 import { useWorker } from "../../context/WorkerContext";
 
 const Layout = () => {
@@ -14,6 +14,12 @@ const Layout = () => {
   const fetchTransportData = () => {
     worker?.postMessage({
       type: FETCH_TRANSPORT_DATA,
+    });
+  }
+
+  const getDataCount = () => {
+    worker?.postMessage({
+      type: DATA_COUNT
     });
   }
 
@@ -34,6 +40,9 @@ const Layout = () => {
               </li>
               <li>
                 <button onClick={fetchTransportData}>Fetch data</button>
+              </li>
+              <li>
+                <button onClick={getDataCount}>Data count</button>
               </li>
             </>
           )}
