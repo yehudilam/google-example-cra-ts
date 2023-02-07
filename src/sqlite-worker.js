@@ -1,5 +1,8 @@
 import { parseRouteData, parseRouteStopData } from "./utils/xmlParser";
-import { GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT } from './constants/WorkerMessageTypes';
+import {
+  GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, LIST_FILES, FETCH_TRANSPORT_DATA,
+  GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT
+} from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
 
@@ -10,20 +13,17 @@ const checkDbFileExistance = async () => {
     const root = await navigator.storage.getDirectory();
 
     for await (const handle of root.values()) {
-      console.log('handle', handle);
-
-      if (handle.kind === "directory") {
-        // directoryNames.push(handle.name);
-        console.log('handle.name', handle.name);
-      }
+      console.log(
+        'handle', 
+        handle,
+        handle.kind === "directory" ? handle.name : [handle.getFile(), handle.getFile()?.size]
+        );
     }
 
   } catch (e) {
     console.error('check file error', e);
   }
 }
-
-// console.log('worker: check file existance');
 // checkDbFileExistance();
 
 const logHtml = function (cssClass, ...args) {
@@ -48,8 +48,6 @@ const fetchInsertBusRoutes = async (db) => {
       bind: [routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time],
     })
   }
-
-  // const routeStops = await parseRouteStopData();
 };
 
 const fetchInsertRouteStops = async (db) => {
@@ -110,17 +108,8 @@ const start = async function (sqlite3) {
       stopc TEXT NOT NULL
     )`);
 
-    await fetchInsertBusRoutes(db);
-    await fetchInsertRouteStops(db);
-
-    /*
-    db.exec({
-      sql: 'select count(*) from busfare3a',
-      callback: function (row) {
-        log('row ', row)
-      }.bind({ counter: 0 }),
-    });
-    */
+    routeStopsCount(db);
+    routesCount(db);
 
   } finally {
     // db.close();
@@ -160,8 +149,8 @@ self
     }
   });
 
-onmessage = (e) => {
-  console.log('on message', e);
+onmessage = async (e) => {
+  // console.log('on message', e);
 
   if (e?.data?.type === GET_ROUTES) {
     const results = [];
@@ -174,7 +163,6 @@ onmessage = (e) => {
       callback: function (row) {
         results.push(row);
       }.bind({ counter: 0 }),
-
     });
 
     postMessage({
@@ -290,5 +278,46 @@ onmessage = (e) => {
         stops: routedir,
       }
     })
+  } else if (e?.data?.type === LIST_FILES) {
+    checkDbFileExistance();
+  } else if (e?.data?.type === FETCH_TRANSPORT_DATA) {
+    await fetchInsertBusRoutes(db);
+    await fetchInsertRouteStops(db);
   }
 }
+
+const routesCount = (db) => {
+  const results = [];
+
+  db.exec({
+    sql: 'SELECT COUNT(*) from busfare3a',
+    rowMode: 'object',
+    returnValue: 'resultRows',
+    callback: function (row) {
+      results.push(row);
+    },
+  });
+
+  postMessage({
+    type: GET_ROUTES_COUNT,
+    data: { results },
+  });
+};
+
+const routeStopsCount = () => {
+  const results = [];
+
+  db.exec({
+    sql: 'SELECT COUNT(*) from rstop2',
+    rowMode: 'object',
+    returnValue: 'resultRows',
+    callback: function (row) {
+      results.push(row);
+    },
+  });
+
+  postMessage({
+    type: GET_ROUTE_STOPS_COUNT,
+    data: { results },
+  });
+};

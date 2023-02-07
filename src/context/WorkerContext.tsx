@@ -2,6 +2,8 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 import { GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT } from "../constants/WorkerMessageTypes";
 
 interface WorkerContextType {
+  setUpWorker: () => void,
+  terminateWorker: () => void,
   worker?: any
   data: {
     route?: any,
@@ -12,6 +14,8 @@ interface WorkerContextType {
 
 export const WorkerContext = createContext<WorkerContextType>({
   // worker: null
+  setUpWorker: () => {},
+  terminateWorker: () => {},
   data: {},
 });
 
@@ -71,31 +75,51 @@ export const WorkerProvider = ({
         break;
       default:
         // logHtml('error', 'Unhandled message:', data.type);
-
-        console.error(data.payload.cssClass, ...data.payload.args);
+        // console.error(data.payload.cssClass, ...data.payload.args);
+        console.log('post message, unknown data type', data);
     }
   }, []);
 
-  useEffect(() => {
-    console.log('loading worker');
+  // useEffect(() => {
+  //   console.log('loading worker');
 
-    const w = new Worker(new URL('../sqlite-worker.js?sqlite3.dir=jswasm', import.meta.url), {
-      type: 'module',
-    });
+  //   const w = new Worker(new URL('../sqlite-worker.js?sqlite3.dir=jswasm', import.meta.url), {
+  //     type: 'module',
+  //   });
 
-    w.onmessage = onMessage;
+  //   w.onmessage = onMessage;
 
-    setWorker(w);
+  //   setWorker(w);
 
-    return () => {
-      console.log('terminating worker');
-      setWorker(undefined);
-      w.terminate();
-    };
-  }, [
-    onMessage, 
-    // workerSettingUp,
-  ]);
+  //   return () => {
+  //     console.log('terminating worker');
+  //     setWorker((w: any) => {
+  //       w.terminate();
+  //       return undefined;
+  //     });
+      
+  //   };
+  // }, [
+  //   onMessage, 
+  //   // workerSettingUp,
+  // ]);
+
+  const setUpWorker = () => {
+    if(!worker){
+      const w = new Worker(new URL('../sqlite-worker.js?sqlite3.dir=jswasm', import.meta.url), {
+        type: 'module',
+      });
+  
+      w.onmessage = onMessage;
+  
+      setWorker(w);
+    }
+  };
+
+  const terminateWorker = () => {
+    setWorker(undefined);
+      worker.terminate();
+  }
 
   return (
     <WorkerContext.Provider value={{
@@ -103,7 +127,9 @@ export const WorkerProvider = ({
       data: {
         route, routes,
         routeStopMap,
-      }
+      },
+      setUpWorker, 
+      terminateWorker,
     }}>
       {children}
     </WorkerContext.Provider>
