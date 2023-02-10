@@ -11,7 +11,7 @@ const BusRouteList = () => {
       <h1>Bus routes: </h1>
       <div>
         {routes?.map((route: any) => (
-          <NavLink to={`/route/id/${route.routeid}`}>
+          <NavLink key={route.routeid} to={`/route/id/${route.routeid}`}>
             <BusRoute route={route} />
           </NavLink>
         ))}

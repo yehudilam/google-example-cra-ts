@@ -2,7 +2,7 @@ import { parseRouteData, parseRouteStopData } from "./utils/xmlParser";
 import {
   GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, LIST_FILES, FETCH_TRANSPORT_DATA,
   GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT,
-  DATA_COUNT,
+  DATA_COUNT, CLEAR_DATA
 } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
@@ -15,10 +15,10 @@ const checkDbFileExistance = async () => {
 
     for await (const handle of root.values()) {
       console.log(
-        'handle', 
+        'handle',
         handle,
         handle.kind === "directory" ? handle.name : [await handle.getFile(), (await handle.getFile())?.size]
-        );
+      );
     }
 
   } catch (e) {
@@ -41,6 +41,8 @@ const error = (...args) => logHtml('error', ...args);
 
 const fetchInsertBusRoutes = async (db) => {
   const routes = await parseRouteData();
+  
+  console.log('inserting bus routes: ', routes);
 
   for (let i = 0; i < routes.length; i++) {
     const { routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time } = routes[i];
@@ -53,6 +55,8 @@ const fetchInsertBusRoutes = async (db) => {
 
 const fetchInsertRouteStops = async (db) => {
   const routeStops = await parseRouteStopData();
+
+  console.log('inserting route stops: ', routeStops);
 
   for (let i = 0; i < routeStops.length; i++) {
     // todo: batch
@@ -213,9 +217,8 @@ onmessage = async (e) => {
     const results = [];
     const { stopid } = e?.data?.variables;
 
-    // todo: distinct routec
     db.exec({
-      sql: "SELECT a.*, b.routec, b.startc, b.destinc FROM rstop2 as a join busfare3a as b on a.routeid=b.routeid where a.stopid=?",
+      sql: "SELECT DISTINCT b.routeid, b.routec, b.startc, b.destinc FROM rstop2 as a join busfare3a as b on a.routeid=b.routeid where a.stopid=?",
       rowMode: 'object',
       returnValue: 'resultRows',
       bind: [stopid],
@@ -284,11 +287,19 @@ onmessage = async (e) => {
   } else if (e?.data?.type === FETCH_TRANSPORT_DATA) {
     await fetchInsertBusRoutes(db);
     await fetchInsertRouteStops(db);
-  } else if (e?.data?.type === DATA_COUNT){
+  } else if (e?.data?.type === DATA_COUNT) {
     routeStopsCount(db);
     routesCount(db);
+  } else if (e?.data?.type === CLEAR_DATA) {
+    clearData(db);
   }
 }
+
+const clearData = (db) => {
+  console.log('clearing data: ');
+  db.exec('DROP TABLE IF EXISTS rstop2;');
+  db.exec('DROP TABLE IF EXISTS busfare3a;');
+};
 
 const routesCount = (db) => {
   const results = [];

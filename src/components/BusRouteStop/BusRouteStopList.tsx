@@ -34,7 +34,7 @@ const BusRouteStopList = ({
   return (
     <div>
       {routeStops.map((rs: any) => (
-        <BusRouteStop routeStop={rs as BusRouteStopType} />
+        <BusRouteStop key={`${rs.stopid}-${rs.stopseq}-${rs.routedir}`} routeStop={rs as BusRouteStopType} />
       ))}
     </div>
   );

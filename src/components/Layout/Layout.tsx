@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { DATA_COUNT, FETCH_TRANSPORT_DATA, LIST_FILES } from "../../constants/WorkerMessageTypes";
+import { CLEAR_DATA, DATA_COUNT, FETCH_TRANSPORT_DATA, LIST_FILES } from "../../constants/WorkerMessageTypes";
 import { useWorker } from "../../context/WorkerContext";
 
 const Layout = () => {
@@ -23,6 +23,12 @@ const Layout = () => {
     });
   }
 
+  const clearData = () => {
+    worker?.postMessage({
+      type: CLEAR_DATA,
+    });
+  }
+
   return (
     <div>
       {/* A "layout route" is a good place to put markup you want to
@@ -43,6 +49,9 @@ const Layout = () => {
               </li>
               <li>
                 <button onClick={getDataCount}>Data count</button>
+              </li>
+              <li>
+                <button onClick={clearData}>Clear data</button>
               </li>
             </>
           )}
