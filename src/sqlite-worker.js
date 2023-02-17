@@ -2,7 +2,7 @@ import { parseRouteData, parseRouteStopData, parseCoorData } from "./utils/xmlPa
 import {
   GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, LIST_FILES, FETCH_TRANSPORT_DATA,
   GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT,
-  DATA_COUNT, CLEAR_DATA, DB_READY, GET_COORS_COUNT, DB_LOADING
+  DATA_COUNT, CLEAR_DATA, DB_READY, GET_COORS_COUNT, DB_LOADING, DATA_COUNT_RESULT
 } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
@@ -103,8 +103,6 @@ const start = async function (sqlite3) {
 
   try {
     log('Create a table...');
-    // db.exec('CREATE TABLE IF NOT EXISTS t(a,b)');
-    // db.exec('DROP TABLE IF EXISTS busfare3a;');
 
     db.exec(`CREATE TABLE IF NOT EXISTS busfare3a (
       routeid INTEGER PRIMARY KEY,
@@ -129,18 +127,13 @@ const start = async function (sqlite3) {
       stopc TEXT NOT NULL
     )`);
 
-
-    log("creating coors table");
-
     db.exec(`CREATE TABLE IF NOT EXISTS coors (
       stopid INTEGER NOT NULL,
       lat REAL NOT NULL,
       lng REAL NOT NULL
     )`)
 
-    routeStopsCount(db);
-    routesCount(db);
-    coorsCount(db);
+    dataCount(db);
 
   } finally {
     // db.close();
@@ -348,8 +341,8 @@ onmessage = async (e) => {
 
     clearData(db);
 
-    // await fetchInsertBusRoutes(db);
-    // await fetchInsertRouteStops(db);
+    await fetchInsertBusRoutes(db);
+    await fetchInsertRouteStops(db);
     await fetchInsertCoors(db);
 
     postMessage({
@@ -357,18 +350,18 @@ onmessage = async (e) => {
     });
 
   } else if (e?.data?.type === DATA_COUNT) {
-    routeStopsCount(db);
-    routesCount(db);
-    coorsCount(db);
+    dataCount(db);
+
   } else if (e?.data?.type === CLEAR_DATA) {
     clearData(db);
+    
   } 
 }
 
 const clearData = (db) => {
   console.log('clearing data: ');
-  // db.exec('DELETE FROM rstop2;');
-  // db.exec('DELETE FROM busfare3a;');
+  db.exec('DELETE FROM rstop2;');
+  db.exec('DELETE FROM busfare3a;');
   db.exec('DELETE FROM coors;');
 };
 
@@ -376,58 +369,54 @@ const dropTables = (db) => {
   console.log('dropping tables');
   db.exec('DROP TABLE IF EXISTS rstop2;');
   db.exec('DROP TABLE IF EXISTS busfare3a;');
+  db.exec('DROP TABLE IF EXISTS coors;');
 }
 
-const routesCount = (db) => {
-  const results = [];
+const dataCount = (db) => {
+  const count = {
+    routes: 0,
+    routeStops: 0,
+    coors: 0,
+  };
 
   db.exec({
     sql: 'SELECT COUNT(*) from busfare3a',
     rowMode: 'object',
     returnValue: 'resultRows',
     callback: function (row) {
-      results.push(row);
+      count.routes = row['COUNT(*)'];
     },
   });
-
-  postMessage({
-    type: GET_ROUTES_COUNT,
-    data: { results },
-  });
-};
-
-const routeStopsCount = () => {
-  const results = [];
 
   db.exec({
     sql: 'SELECT COUNT(*) from rstop2',
     rowMode: 'object',
     returnValue: 'resultRows',
     callback: function (row) {
-      results.push(row);
+      console.log(row, row['COUNT(*)']);
+      count.routeStops = row['COUNT(*)'];
     },
   });
-
-  postMessage({
-    type: GET_ROUTE_STOPS_COUNT,
-    data: { results },
-  });
-};
-
-const coorsCount = () => {
-  const results = [];
 
   db.exec({
     sql: 'SELECT COUNT(*) from coors',
     rowMode: 'object',
     returnValue: 'resultRows',
     callback: function (row) {
-      results.push(row);
+      count.coors = row['COUNT(*)'];
     },
   });
 
   postMessage({
-    type: GET_COORS_COUNT,
-    data: { results },
+    type: DATA_COUNT_RESULT,
+    data: {
+      count,
+    },
   });
-};
+}
+
+// todo: check if data are loaded, save last update date
+// if 
+// 1. data older than 3 months/ no data loaded, prompt load DB
+
+// add point to point search capabilities (?)

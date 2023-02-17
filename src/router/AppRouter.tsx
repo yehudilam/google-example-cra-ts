@@ -11,11 +11,11 @@ const AppRouter = () => {
 
   if(!dbReady){
     return (
-      <div className="flex">
-        <div className="mr-4">
+      <div className="flex justify-start items-center">
+        <div className="p-4">
           <LoadingSpinner />
         </div>
-        <p>Loading</p>
+        <p>Loading... Please wait</p>
       </div>
     );
   }

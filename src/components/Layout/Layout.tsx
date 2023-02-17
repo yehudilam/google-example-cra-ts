@@ -3,7 +3,7 @@ import { CLEAR_DATA, DATA_COUNT, FETCH_TRANSPORT_DATA, LIST_FILES } from "../../
 import { useWorker } from "../../context/WorkerContext";
 
 const Layout = () => {
-  const { worker, setUpWorker } = useWorker();
+  const { worker, setUpWorker, dataNotLoaded } = useWorker();
 
   const listFiles = () => {
     worker?.postMessage({
@@ -66,6 +66,16 @@ const Layout = () => {
         </nav>
 
         <div className="p-4">
+
+          {dataNotLoaded && (
+            <div className="mb-2 p-4 bg-red-200">
+              <h2 className="font-bold text-xl mb-2">
+                Data not loaded, would you like to load now?
+              </h2>
+              <button onClick={fetchTransportData}>Load Now!</button>
+            </div>
+          )}
+
           <Outlet />
         </div>
       </div>

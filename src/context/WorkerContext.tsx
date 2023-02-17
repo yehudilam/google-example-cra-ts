@@ -1,11 +1,12 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { DB_LOADING, GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT, DB_READY } from "../constants/WorkerMessageTypes";
+import { DB_LOADING, DATA_COUNT_RESULT, GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT, DB_READY } from "../constants/WorkerMessageTypes";
 
 interface WorkerContextType {
   setUpWorker: () => void,
   terminateWorker: () => void,
   worker?: any;
   dbReady: boolean;
+  dataNotLoaded: boolean;
   data: {
     route?: any,
     routes?: any[],
@@ -20,6 +21,7 @@ export const WorkerContext = createContext<WorkerContextType>({
   setUpWorker: () => { },
   terminateWorker: () => { },
   dbReady: false,
+  dataNotLoaded: true,
   data: {},
 });
 
@@ -37,6 +39,8 @@ export const WorkerProvider = ({
   // const [workerSettingUp, setWorkerSettingUp] = useState(false);
 
   const [dbReady, setDbReady] = useState(false);
+  const [dataNotLoaded, setDataNotLoaded] = useState(true);
+
   const [route, setRoute] = useState<any>(undefined);
   const [routes, setRoutes] = useState([]);
   const [routeStopMap, setRouteStopMap] = useState<Record<string, any>>({});
@@ -96,6 +100,27 @@ export const WorkerProvider = ({
       case DB_LOADING: 
         setDbReady(false);
         break;
+
+      case DATA_COUNT_RESULT:
+        const {
+          count,
+        } = data.data;
+
+        console.log('data count result', data, count);
+
+        if(!count){
+          setDataNotLoaded(true);
+          break;
+        }
+
+        const {
+          routes: routesCount, routeStops, coors,
+        } = count;
+
+        console.log('data loaded?', routesCount, routeStops, coors, routesCount && routeStops && coors);
+        setDataNotLoaded(!(routesCount && routeStops && coors));
+      
+        break;
       default:
         // logHtml('error', 'Unhandled message:', data.type);
         // console.error(data.payload.cssClass, ...data.payload.args);
@@ -153,6 +178,7 @@ export const WorkerProvider = ({
         stopcs, coor,
       },
       dbReady,
+      dataNotLoaded,
       setUpWorker,
       terminateWorker,
     }}>

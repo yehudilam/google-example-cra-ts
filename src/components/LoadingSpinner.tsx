@@ -1,11 +1,11 @@
 import styled from 'styled-components';
 
 const LoadingSpinner = styled.div`
-  border: 4px solid #f3f3f3; /* Light grey */
-  border-top: 4px solid #3498db; /* Blue */
+  border: 6px solid #f3f3f3; /* Light grey */
+  border-top: 6px solid #3498db; /* Blue */
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   animation: spin 2s linear infinite;
 
   @keyframes spin {

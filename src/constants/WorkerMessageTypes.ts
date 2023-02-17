@@ -17,13 +17,16 @@ export const GET_STOP_COOR_RESULT = '';
 export const GET_STOP_ROUTES = 'GET_STOP_ROUTES';
 export const GET_STOP_ROUTES_RESULT = 'GET_STOP_ROUTES_RESULT';
 
+// next three no longer used
 export const GET_ROUTES_COUNT = 'GET_ROUTES_COUNT';
 export const GET_ROUTE_STOPS_COUNT = 'GET_ROUTE_STOPS_COUNT';
 export const GET_COORS_COUNT = 'GET_COORS_COUNT';
 
+export const DATA_COUNT = 'DATA_COUNT';
+export const DATA_COUNT_RESULT = 'DATA_COUNT_RESULT';
+
 export const LIST_FILES = 'LIST_FILES';
 export const FETCH_TRANSPORT_DATA = 'FETCH_TRANSPORT_DATA';
-export const DATA_COUNT = 'DATA_COUNT';
 export const CLEAR_DATA = 'CLEAR_DATA';
 export const DB_READY = 'DB_READY';
 export const DB_LOADING = 'DB_LOADING';
