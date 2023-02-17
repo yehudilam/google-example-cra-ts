@@ -1,4 +1,5 @@
 import convert from 'xml-js';
+import convert1980 from './hk1980Wgs';
 
 const BUS_ROUTES_XML = 'https://static.data.gov.hk/td/routes-fares-xml/ROUTE_BUS.xml';
 
@@ -78,8 +79,10 @@ const parseRouteData = async () => {
   return data;
 };
 
-const BUS_ROUTE_STOP_XML = 'https://static.data.gov.hk/td/routes-fares-xml/RSTOP_BUS.xml';
+// const BUS_ROUTE_STOP_XML = 'https://static.data.gov.hk/td/routes-fares-xml/RSTOP_BUS.xml';
 const BUS_ROUTE_STOP_JSON = 'https://static.data.gov.hk/td/routes-fares-geojson/JSON_BUS.json';
+
+const BUS_STOP_COOR = 'https://static.data.gov.hk/td/routes-fares-xml/STOP_BUS.xml';
 
 // list of route-stops
 const parseRouteStopData = async () => {
@@ -105,6 +108,58 @@ const parseRouteStopData = async () => {
   });
 }
 
-// list of coors
+export interface CoorGrid {
+  stopid: number;
+  x: number;
+  y: number;
+}
 
-export {parseRouteData, parseRouteStopData};
+export interface Coor{
+  stopid: number;
+  lat: number;
+  lng: number;
+}
+
+// list of coors
+const parseCoorData = async () => {
+  const res = await fetchXmlString(BUS_STOP_COOR);
+  console.log('coor res', res);
+
+  return res.elements[0].elements.map((item: any) => {
+    // stopid, x, y
+    return item.elements.reduce((acc: CoorGrid, cur: any) => {
+      if(cur.name === 'STOP_ID'){
+        return {
+          ...acc,
+          stopid: parseInt(cur.elements[0].text, 10), 
+        }
+      }else if(cur.name === 'X'){
+        return {
+          ...acc,
+          x: parseInt(cur.elements[0].text, 10),
+        }
+      }else if(cur.name === 'Y'){
+        return {
+          ...acc,
+          y: parseInt(cur.elements[0].text, 10),
+        }
+      }
+
+      return acc;
+    }, {
+      stopid: 0,
+      x: 0, 
+      y: 0,
+    });
+  })
+  .map(({ stopid, x, y }: CoorGrid) => {
+    const [lat, lng] = convert1980(y, x);
+
+    return {
+      lat, lng, stopid,
+    };
+  })
+  
+};
+
+export {parseRouteData, parseRouteStopData, parseCoorData};

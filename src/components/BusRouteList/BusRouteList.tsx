@@ -8,7 +8,9 @@ const BusRouteList = () => {
 
   return (
     <div>
-      <h1>Bus routes: </h1>
+      {(routes?.length ?? 0) > 0 && (
+        <h3 className="text-2xl">Bus routes: </h3>
+      )}
       <div>
         {routes?.map((route: any) => (
           <NavLink key={route.routeid} to={`/route/id/${route.routeid}`}>

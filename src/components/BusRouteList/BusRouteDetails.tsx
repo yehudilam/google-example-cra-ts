@@ -5,10 +5,11 @@ const BusRouteDetails = ({ route }: any) => {
   return (
     <>
       <div className="flex"
-      // onClick={() => setClicked(true)}
       >
-        <div className="text-bold mr-2">{route.routec}</div>
-        <div>{route.startc} - {route.destinc}</div>
+        <h2 className="mb-4 text-xl">
+          <span className="font-bold mr-2">{route.routec}</span>
+          <span>{route.startc} - {route.destinc}</span>
+        </h2>
       </div>
 
       <BusRouteListTwoWayList routeid={route.routeid} />

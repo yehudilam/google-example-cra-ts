@@ -1,8 +1,8 @@
-import { parseRouteData, parseRouteStopData } from "./utils/xmlParser";
+import { parseRouteData, parseRouteStopData, parseCoorData } from "./utils/xmlParser";
 import {
   GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, LIST_FILES, FETCH_TRANSPORT_DATA,
   GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT,
-  DATA_COUNT, CLEAR_DATA, DB_READY
+  DATA_COUNT, CLEAR_DATA, DB_READY, GET_COORS_COUNT, DB_LOADING
 } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
@@ -69,6 +69,22 @@ const fetchInsertRouteStops = async (db) => {
   }
 }
 
+const fetchInsertCoors = async (db) => {
+  const coors = await parseCoorData();
+
+  console.log('coors', coors);
+
+  for (let i = 0; i < coors.length; i++) {
+    // todo: batch
+    const { stopid, lat, lng } = coors[i];
+
+    db.exec({
+      sql: 'INSERT INTO coors (stopid, lat, lng) values (?, ?, ?)',
+      bind: [stopid, lat, lng]
+    });
+  }
+}
+
 let db;
 
 const start = async function (sqlite3) {
@@ -113,8 +129,18 @@ const start = async function (sqlite3) {
       stopc TEXT NOT NULL
     )`);
 
+
+    log("creating coors table");
+
+    db.exec(`CREATE TABLE IF NOT EXISTS coors (
+      stopid INTEGER NOT NULL,
+      lat REAL NOT NULL,
+      lng REAL NOT NULL
+    )`)
+
     routeStopsCount(db);
     routesCount(db);
+    coorsCount(db);
 
   } finally {
     // db.close();
@@ -220,6 +246,29 @@ onmessage = async (e) => {
   } else if (e?.data?.type === GET_STOP_ROUTES) {
     const results = [];
     const { stopid } = e?.data?.variables;
+    let stopcs = [];
+    let coor = {};
+
+    // get stop name and coor
+    db.exec({
+      sql: "SELECT DISTINCT stopc from rstop2 where stopid=?",
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [stopid],
+      callback: function ({ stopc }) {
+        stopcs.push(stopc);
+      }
+    });
+
+    db.exec({
+      sql: "SELECT * from coors where stopid=?",
+      rowMode: 'object',
+      returnValue: 'resultRows',
+      bind: [stopid],
+      callback: function (row) {
+        coor = row;
+      }
+    });
 
     db.exec({
       sql: "SELECT DISTINCT b.routeid, b.routec, b.startc, b.destinc FROM rstop2 as a join busfare3a as b on a.routeid=b.routeid where a.stopid=?",
@@ -233,7 +282,11 @@ onmessage = async (e) => {
 
     postMessage({
       type: GET_STOP_ROUTES_RESULT,
-      data: results,
+      data: {
+        routes: results,
+        coor,
+        stopcs,
+      },
     });
   } else if (e?.data?.type === GET_ROUTE) {
     let routeDetail = undefined;
@@ -289,21 +342,41 @@ onmessage = async (e) => {
   } else if (e?.data?.type === LIST_FILES) {
     checkDbFileExistance();
   } else if (e?.data?.type === FETCH_TRANSPORT_DATA) {
-    await fetchInsertBusRoutes(db);
-    await fetchInsertRouteStops(db);
+    postMessage({
+      type: 'DB_LOADING',
+    });
+
+    clearData(db);
+
+    // await fetchInsertBusRoutes(db);
+    // await fetchInsertRouteStops(db);
+    await fetchInsertCoors(db);
+
+    postMessage({
+      type: 'DB_READY',
+    });
+
   } else if (e?.data?.type === DATA_COUNT) {
     routeStopsCount(db);
     routesCount(db);
+    coorsCount(db);
   } else if (e?.data?.type === CLEAR_DATA) {
     clearData(db);
-  }
+  } 
 }
 
 const clearData = (db) => {
   console.log('clearing data: ');
+  // db.exec('DELETE FROM rstop2;');
+  // db.exec('DELETE FROM busfare3a;');
+  db.exec('DELETE FROM coors;');
+};
+
+const dropTables = (db) => {
+  console.log('dropping tables');
   db.exec('DROP TABLE IF EXISTS rstop2;');
   db.exec('DROP TABLE IF EXISTS busfare3a;');
-};
+}
 
 const routesCount = (db) => {
   const results = [];
@@ -337,6 +410,24 @@ const routeStopsCount = () => {
 
   postMessage({
     type: GET_ROUTE_STOPS_COUNT,
+    data: { results },
+  });
+};
+
+const coorsCount = () => {
+  const results = [];
+
+  db.exec({
+    sql: 'SELECT COUNT(*) from coors',
+    rowMode: 'object',
+    returnValue: 'resultRows',
+    callback: function (row) {
+      results.push(row);
+    },
+  });
+
+  postMessage({
+    type: GET_COORS_COUNT,
     data: { results },
   });
 };

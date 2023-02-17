@@ -23,7 +23,6 @@ const BusRoutePageById = () => {
 
   return (
     <div>
-      <h1>Bus Route ID: {routeid}</h1>
       { route && (<BusRouteDetails route={route} />)}
     </div>
   );

@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "../components/Layout/Layout";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useWorker } from "../context/WorkerContext";
 import BusRoutePageById from "../pages/BusRoutePageById";
 import BusStop from "../pages/BusStop";
@@ -9,7 +10,14 @@ const AppRouter = () => {
   const { dbReady } = useWorker();
 
   if(!dbReady){
-    return <>Loading</>;
+    return (
+      <div className="flex">
+        <div className="mr-4">
+          <LoadingSpinner />
+        </div>
+        <p>Loading</p>
+      </div>
+    );
   }
 
   return (

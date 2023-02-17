@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT, DB_READY } from "../constants/WorkerMessageTypes";
+import { DB_LOADING, GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT, DB_READY } from "../constants/WorkerMessageTypes";
 
 interface WorkerContextType {
   setUpWorker: () => void,
@@ -10,6 +10,8 @@ interface WorkerContextType {
     route?: any,
     routes?: any[],
     routeStopMap?: Record<string, any>,
+    coor?: Coor,
+    stopcs?: string[],
   },
 }
 
@@ -20,6 +22,11 @@ export const WorkerContext = createContext<WorkerContextType>({
   dbReady: false,
   data: {},
 });
+
+interface Coor {
+  lat: number;
+  lng: number;
+}
 
 export const WorkerProvider = ({
   children
@@ -33,6 +40,8 @@ export const WorkerProvider = ({
   const [route, setRoute] = useState<any>(undefined);
   const [routes, setRoutes] = useState([]);
   const [routeStopMap, setRouteStopMap] = useState<Record<string, any>>({});
+  const [coor, setCoor] = useState<Coor | undefined>();
+  const [stopcs, setStopcs] = useState<string[]>([]);
 
   const onMessage = useCallback(({ data }: { data: any }) => {
     console.log('worker hook, call back message', data);
@@ -73,14 +82,19 @@ export const WorkerProvider = ({
         break;
 
       case GET_STOP_ROUTES_RESULT:
-        setRoutes(data.data);
+        const { routes, coor, stopcs} = data.data;
+
+        setRoutes(routes);
+        setCoor(coor);
+        setStopcs(stopcs);
 
         break;
       case DB_READY: 
         setDbReady(true);
 
-        console.log('db ready');
-        
+        break;
+      case DB_LOADING: 
+        setDbReady(false);
         break;
       default:
         // logHtml('error', 'Unhandled message:', data.type);
@@ -136,6 +150,7 @@ export const WorkerProvider = ({
       data: {
         route, routes,
         routeStopMap,
+        stopcs, coor,
       },
       dbReady,
       setUpWorker,
