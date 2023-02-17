@@ -1,10 +1,11 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT } from "../constants/WorkerMessageTypes";
+import { GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT, DB_READY } from "../constants/WorkerMessageTypes";
 
 interface WorkerContextType {
   setUpWorker: () => void,
   terminateWorker: () => void,
-  worker?: any
+  worker?: any;
+  dbReady: boolean;
   data: {
     route?: any,
     routes?: any[],
@@ -16,6 +17,7 @@ export const WorkerContext = createContext<WorkerContextType>({
   // worker: null
   setUpWorker: () => { },
   terminateWorker: () => { },
+  dbReady: false,
   data: {},
 });
 
@@ -27,6 +29,7 @@ export const WorkerProvider = ({
   const [worker, setWorker] = useState<any>(undefined);
   // const [workerSettingUp, setWorkerSettingUp] = useState(false);
 
+  const [dbReady, setDbReady] = useState(false);
   const [route, setRoute] = useState<any>(undefined);
   const [routes, setRoutes] = useState([]);
   const [routeStopMap, setRouteStopMap] = useState<Record<string, any>>({});
@@ -73,6 +76,12 @@ export const WorkerProvider = ({
         setRoutes(data.data);
 
         break;
+      case DB_READY: 
+        setDbReady(true);
+
+        console.log('db ready');
+        
+        break;
       default:
         // logHtml('error', 'Unhandled message:', data.type);
         // console.error(data.payload.cssClass, ...data.payload.args);
@@ -80,29 +89,29 @@ export const WorkerProvider = ({
     }
   }, []);
 
-  // useEffect(() => {
-  //   console.log('loading worker');
+  useEffect(() => {
+    console.log('loading worker');
 
-  //   const w = new Worker(new URL('../sqlite-worker.js?sqlite3.dir=jswasm', import.meta.url), {
-  //     type: 'module',
-  //   });
+    const w = new Worker(new URL('../sqlite-worker.js?sqlite3.dir=jswasm', import.meta.url), {
+      type: 'module',
+    });
 
-  //   w.onmessage = onMessage;
+    w.onmessage = onMessage;
 
-  //   setWorker(w);
+    setWorker(w);
 
-  //   return () => {
-  //     console.log('terminating worker');
-  //     setWorker((w: any) => {
-  //       w.terminate();
-  //       return undefined;
-  //     });
+    return () => {
+      console.log('terminating worker');
+      setWorker((w: any) => {
+        w.terminate();
+        return undefined;
+      });
 
-  //   };
-  // }, [
-  //   onMessage, 
-  //   // workerSettingUp,
-  // ]);
+    };
+  }, [
+    onMessage, 
+    // workerSettingUp,
+  ]);
 
   const setUpWorker = () => {
     if (!worker) {
@@ -128,6 +137,7 @@ export const WorkerProvider = ({
         route, routes,
         routeStopMap,
       },
+      dbReady,
       setUpWorker,
       terminateWorker,
     }}>

@@ -30,41 +30,38 @@ const Layout = () => {
   }
 
   return (
-    <div>
-      {/* A "layout route" is a good place to put markup you want to
-          share across all the pages on your site, like navigation. */}
-      <nav>
-        <ul>
-          <li>
-            {/* todo manually start loading worker: */}
-            <button onClick={setUpWorker}>Load worker</button>
-          </li>
-          {worker && (
-            <>
-              <li>
-                <button onClick={listFiles}>List Files</button>
-              </li>
-              <li>
-                <button onClick={fetchTransportData}>Fetch data</button>
-              </li>
-              <li>
-                <button onClick={getDataCount}>Data count</button>
-              </li>
-              <li>
-                <button onClick={clearData}>Clear data</button>
-              </li>
-            </>
-          )}
-          
-        </ul>
-      </nav>
+    <div className="flex flex-col">
+      <div className="bg-blue-200 h-16"></div>
 
-      <hr />
+      <div className="flex">
+        <nav>
+          <ul>
+            <li>
+              {/* todo manually start loading worker: */}
+              <button onClick={setUpWorker}>Load worker</button>
+            </li>
+            {worker && (
+              <>
+                <li>
+                  <button onClick={listFiles}>List Files</button>
+                </li>
+                <li>
+                  <button onClick={fetchTransportData}>Fetch data</button>
+                </li>
+                <li>
+                  <button onClick={getDataCount}>Data count</button>
+                </li>
+                <li>
+                  <button onClick={clearData}>Clear data</button>
+                </li>
+              </>
+            )}
 
-      {/* An <Outlet> renders whatever child route is currently active,
-          so you can think about this <Outlet> as a placeholder for
-          the child routes we defined above. */}
-      <Outlet />
+          </ul>
+        </nav>
+
+        <Outlet />
+      </div>
     </div>
   );
 };

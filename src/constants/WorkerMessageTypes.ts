@@ -24,3 +24,4 @@ export const LIST_FILES = 'LIST_FILES';
 export const FETCH_TRANSPORT_DATA = 'FETCH_TRANSPORT_DATA';
 export const DATA_COUNT = 'DATA_COUNT';
 export const CLEAR_DATA = 'CLEAR_DATA';
+export const DB_READY = 'DB_READY';

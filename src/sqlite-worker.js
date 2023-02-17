@@ -2,7 +2,7 @@ import { parseRouteData, parseRouteStopData } from "./utils/xmlParser";
 import {
   GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, LIST_FILES, FETCH_TRANSPORT_DATA,
   GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT,
-  DATA_COUNT, CLEAR_DATA
+  DATA_COUNT, CLEAR_DATA, DB_READY
 } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
@@ -148,7 +148,11 @@ self
     try {
       start(sqlite3);
 
-      sqlite3Instance = sqlite3
+      sqlite3Instance = sqlite3;
+
+      postMessage({
+        type: DB_READY,
+      })
     } catch (e) {
       error('Exception:', e.message);
     }
