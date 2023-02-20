@@ -21,7 +21,7 @@ const BusRouteStopList = ({
       type: GET_ROUTE_STOPS,
       variables: {routeid, routedir},
     });
-  }, [routeid, routedir]);
+  }, [routeid, routedir, worker]);
   
   const routeStops = routeStopMap?.[`${routeid}-${routedir}`];
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import BusRouteList from "../components/BusRouteList/BusRouteList";
-import { GET_ROUTES, SEARCH_ROUTE_BY_NAME } from "../constants/WorkerMessageTypes";
+import { SEARCH_ROUTE_BY_NAME } from "../constants/WorkerMessageTypes";
 import { useWorker } from "../context/WorkerContext";
 
 const Home = () => {

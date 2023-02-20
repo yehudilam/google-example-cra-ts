@@ -1,8 +1,11 @@
 import { parseRouteData, parseRouteStopData, parseCoorData } from "./utils/xmlParser";
 import {
-  GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, LIST_FILES, FETCH_TRANSPORT_DATA,
+  // GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, 
+  LIST_FILES, FETCH_TRANSPORT_DATA,
   GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT,
-  DATA_COUNT, CLEAR_DATA, DB_READY, GET_COORS_COUNT, DB_LOADING, DATA_COUNT_RESULT
+  DATA_COUNT, CLEAR_DATA, DB_READY, 
+  // GET_COORS_COUNT, DB_LOADING,
+  DATA_COUNT_RESULT
 } from './constants/WorkerMessageTypes';
 
 console.log('Running demo from Worker thread.');
@@ -35,7 +38,7 @@ const logHtml = function (cssClass, ...args) {
 };
 
 const log = (...args) => logHtml('', ...args);
-const warn = (...args) => logHtml('warning', ...args);
+// const warn = (...args) => logHtml('warning', ...args);
 const error = (...args) => logHtml('error', ...args);
 
 
@@ -154,7 +157,7 @@ if (urlParams.has('sqlite3.dir')) {
 /* eslint-disable-next-line no-undef */
 importScripts(sqlite3Js);
 
-let sqlite3Instance;
+// let sqlite3Instance;
 
 /* eslint-disable-next-line no-restricted-globals */
 self
@@ -167,7 +170,7 @@ self
     try {
       start(sqlite3);
 
-      sqlite3Instance = sqlite3;
+      // sqlite3Instance = sqlite3;
 
       postMessage({
         type: DB_READY,
@@ -190,7 +193,8 @@ onmessage = async (e) => {
 
       callback: function (row) {
         results.push(row);
-      }.bind({ counter: 0 }),
+      }
+      // .bind({ counter: 0 }),
     });
 
     postMessage({
@@ -365,12 +369,12 @@ const clearData = (db) => {
   db.exec('DELETE FROM coors;');
 };
 
-const dropTables = (db) => {
-  console.log('dropping tables');
-  db.exec('DROP TABLE IF EXISTS rstop2;');
-  db.exec('DROP TABLE IF EXISTS busfare3a;');
-  db.exec('DROP TABLE IF EXISTS coors;');
-}
+// const dropTables = (db) => {
+//   console.log('dropping tables');
+//   db.exec('DROP TABLE IF EXISTS rstop2;');
+//   db.exec('DROP TABLE IF EXISTS busfare3a;');
+//   db.exec('DROP TABLE IF EXISTS coors;');
+// }
 
 const dataCount = (db) => {
   const count = {
