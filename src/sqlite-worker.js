@@ -343,7 +343,7 @@ onmessage = async (e) => {
       type: 'DB_LOADING',
     });
 
-    clearData(db);
+    await clearData(db);
 
     await fetchInsertBusRoutes(db);
     await fetchInsertRouteStops(db);
@@ -352,6 +352,8 @@ onmessage = async (e) => {
     postMessage({
       type: 'DB_READY',
     });
+
+    dataCount(db);
 
   } else if (e?.data?.type === DATA_COUNT) {
     dataCount(db);
@@ -362,11 +364,29 @@ onmessage = async (e) => {
   } 
 }
 
-const clearData = (db) => {
+const clearData = async (db) => {
   console.log('clearing data: ');
-  db.exec('DELETE FROM rstop2;');
-  db.exec('DELETE FROM busfare3a;');
-  db.exec('DELETE FROM coors;');
+
+  return Promise.all([
+    new Promise(resolve => {
+      db.exec({
+        sql: 'DELETE FROM rstop2;',
+        callback: () => resolve()
+      });
+    }),
+    new Promise(resolve => {
+      db.exec({
+        sql: 'DELETE FROM busfare3a;',
+        callback: () => resolve()
+      });
+    }),
+    new Promise(resolve => {
+      db.exec({
+        sql: 'DELETE FROM coors;',
+        callback: () => resolve()
+      });
+    }),
+  ]);
 };
 
 // const dropTables = (db) => {
