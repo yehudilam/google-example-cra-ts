@@ -1,10 +1,11 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { DB_LOADING, DATA_COUNT_RESULT, GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT, DB_READY } from "../constants/WorkerMessageTypes";
+import { DB_LOADING, DATA_COUNT_RESULT, GET_ROUTE_RESULT, GET_ROUTES_RESULT, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, GET_STOP_ROUTES_RESULT, DB_READY, DB_LOADING_STATE } from "../constants/WorkerMessageTypes";
 
 interface WorkerContextType {
   setUpWorker: () => void,
   terminateWorker: () => void,
   worker?: any;
+  loadingState: string;
   dbReady: boolean;
   dataNotLoaded: boolean;
   data: {
@@ -21,6 +22,7 @@ export const WorkerContext = createContext<WorkerContextType>({
   setUpWorker: () => { },
   terminateWorker: () => { },
   dbReady: false,
+  loadingState: '',
   dataNotLoaded: true,
   data: {},
 });
@@ -46,6 +48,8 @@ export const WorkerProvider = ({
   const [routeStopMap, setRouteStopMap] = useState<Record<string, any>>({});
   const [coor, setCoor] = useState<Coor | undefined>();
   const [stopcs, setStopcs] = useState<string[]>([]);
+
+  const [loadingState, setLoadingState] = useState('');
 
   const onMessage = useCallback(({ data }: { data: any }) => {
     console.log('worker hook, call back message', data);
@@ -86,21 +90,26 @@ export const WorkerProvider = ({
         break;
 
       case GET_STOP_ROUTES_RESULT:
-        const { routes, coor, stopcs} = data.data;
+        const { routes, coor, stopcs } = data.data;
 
         setRoutes(routes);
         setCoor(coor);
         setStopcs(stopcs);
 
         break;
-      case DB_READY: 
+      case DB_READY:
         setDbReady(true);
 
         break;
-      case DB_LOADING: 
+      case DB_LOADING:
         setDbReady(false);
-        break;
 
+        break;
+      case DB_LOADING_STATE:
+        console.log('db loading state', data);
+        setLoadingState(data.data);
+
+        break;
       case DATA_COUNT_RESULT:
         const {
           count,
@@ -108,7 +117,7 @@ export const WorkerProvider = ({
 
         console.log('data count result', data, count);
 
-        if(!count){
+        if (!count) {
           setDataNotLoaded(true);
           break;
         }
@@ -119,7 +128,7 @@ export const WorkerProvider = ({
 
         console.log('data loaded?', routesCount, routeStops, coors, routesCount && routeStops && coors);
         setDataNotLoaded(!(routesCount && routeStops && coors));
-      
+
         break;
       default:
         // logHtml('error', 'Unhandled message:', data.type);
@@ -148,7 +157,7 @@ export const WorkerProvider = ({
 
     };
   }, [
-    onMessage, 
+    onMessage,
     // workerSettingUp,
   ]);
 
@@ -179,6 +188,7 @@ export const WorkerProvider = ({
       },
       dbReady,
       dataNotLoaded,
+      loadingState,
       setUpWorker,
       terminateWorker,
     }}>

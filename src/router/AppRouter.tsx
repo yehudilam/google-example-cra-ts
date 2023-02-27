@@ -7,15 +7,21 @@ import BusStop from "../pages/BusStop";
 import Home from "../pages/Home";
 
 const AppRouter = () => {
-  const { dbReady } = useWorker();
+  const { dbReady, loadingState } = useWorker();
 
-  if(!dbReady){
+  if (!dbReady) {
     return (
-      <div className="flex justify-start items-center">
-        <div className="p-4">
-          <LoadingSpinner />
+      <div>
+        <div className="flex justify-start items-center">
+          <div className="p-4">
+            <LoadingSpinner />
+          </div>
+          <p>Loading... Please wait</p>
         </div>
-        <p>Loading... Please wait</p>
+
+        {loadingState && (
+          <p>{loadingState}</p>
+        )}
       </div>
     );
   }

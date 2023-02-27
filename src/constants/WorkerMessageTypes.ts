@@ -30,3 +30,4 @@ export const FETCH_TRANSPORT_DATA = 'FETCH_TRANSPORT_DATA';
 export const CLEAR_DATA = 'CLEAR_DATA';
 export const DB_READY = 'DB_READY';
 export const DB_LOADING = 'DB_LOADING';
+export const DB_LOADING_STATE = 'DB_LOADING_STATE';

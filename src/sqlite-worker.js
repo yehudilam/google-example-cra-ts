@@ -3,7 +3,7 @@ import {
   // GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, 
   LIST_FILES, FETCH_TRANSPORT_DATA,
   GET_ROUTES, GET_ROUTES_RESULT, GET_ROUTE_STOPS, GET_ROUTE_STOP_RESULT, SEARCH_ROUTE_BY_NAME_RESULT, SEARCH_ROUTE_BY_NAME, GET_STOP_ROUTES, GET_STOP_ROUTES_RESULT, GET_ROUTE, GET_ROUTE_RESULT,
-  DATA_COUNT, CLEAR_DATA, DB_READY, 
+  DATA_COUNT, CLEAR_DATA, DB_READY, DB_LOADING_STATE,
   // GET_COORS_COUNT, DB_LOADING,
   DATA_COUNT_RESULT
 } from './constants/WorkerMessageTypes';
@@ -41,50 +41,113 @@ const log = (...args) => logHtml('', ...args);
 // const warn = (...args) => logHtml('warning', ...args);
 const error = (...args) => logHtml('error', ...args);
 
+const extractBusRoute = ({ routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time }) => {
+  return [routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time];
+}
 
 const fetchInsertBusRoutes = async (db) => {
   const routes = await parseRouteData();
-  
-  console.log('inserting bus routes: ', routes);
 
-  for (let i = 0; i < routes.length; i++) {
-    const { routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time } = routes[i];
+  for (let i = 0; i < routes.length; i = i + 10) {
+    const dataArray = [...Array(10).keys()]
+      .filter(j => (i + j) < routes.length);
+
+    const data = dataArray
+      .reduce((acc, cur) => {
+        return [
+          ...acc,
+          ...extractBusRoute(routes[i + cur])
+        ];
+      }, []);
+
     db.exec({
-      sql: 'insert into busfare3a (routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      bind: [routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time],
-    })
+      sql: `
+      insert into busfare3a (routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time) values 
+      ${Array(dataArray.length).fill('(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}
+      `,
+      bind: data,
+    });
+
+    if (i % 100 === 0) {
+      postMessage({
+        type: DB_LOADING_STATE,
+        data: `${i}/${routes.length} routes inserted`,
+      });
+    }
   }
 };
+
+const extractRouteStop = ({
+  routeid, stopid, stopseq, routedir, stopc
+}) => {
+  return [routeid, stopid, stopseq, routedir, stopc];
+}
 
 const fetchInsertRouteStops = async (db) => {
   const routeStops = await parseRouteStopData();
 
-  console.log('inserting route stops: ', routeStops);
+  for (let i = 0; i < routeStops.length; i = i + 20) {
+    const dataArray = [...Array(20).keys()]
+      .filter(j => (i + j) < routeStops.length);
 
-  for (let i = 0; i < routeStops.length; i++) {
-    // todo: batch
-    const { routeid, stopid, stopseq, routedir, stopc } = routeStops[i];
+    const data = dataArray.reduce((acc, cur) => {
+      return [
+        ...acc,
+        ...extractRouteStop(routeStops[i + cur])
+      ];
+    }, []);
 
-    db.exec({
-      sql: 'insert into rstop2 (routeid, stopid, stopseq, routedir, stopc) values (?, ?, ?, ?, ?)',
-      bind: [routeid, stopid, stopseq, routedir, stopc]
-    });
+    if (data.length > 0) {
+      db.exec({
+        sql: `
+        insert into rstop2 (routeid, stopid, stopseq, routedir, stopc) values 
+        ${Array(dataArray.length).fill('(?, ?, ?, ?, ?)').join(', ')}
+        `,
+        bind: data,
+      });
+    }
+
+    if (i % 500 === 0) {
+      postMessage({
+        type: DB_LOADING_STATE,
+        data: `${i}/${routeStops.length} stops inserted`,
+      });
+    }
   }
+}
+
+const extractCoors = ({ stopid, lat, lng }) => {
+  return [stopid, lat, lng];
 }
 
 const fetchInsertCoors = async (db) => {
   const coors = await parseCoorData();
 
-  console.log('coors', coors);
+  for (let i = 0; i < coors.length; i = i + 10) {
+    const dataArray = [...Array(10).keys()]
+      .filter(j => (i + j) < coors.length);
 
-  for (let i = 0; i < coors.length; i++) {
-    // todo: batch
-    const { stopid, lat, lng } = coors[i];
+    const data = dataArray.reduce((acc, cur) => {
+      return [
+        ...acc,
+        ...extractCoors(coors[i + cur])
+      ];
+    }, []);
 
     db.exec({
-      sql: 'INSERT INTO coors (stopid, lat, lng) values (?, ?, ?)',
-      bind: [stopid, lat, lng]
+      sql: `
+      INSERT INTO coors (stopid, lat, lng) values 
+      ${Array(dataArray.length).fill('(?, ?, ?)').join(', ')}
+      `,
+      bind: data
     });
+
+    if (i % 100 === 0) {
+      postMessage({
+        type: DB_LOADING_STATE,
+        data: `${i}/${coors.length} stop coordinates inserted`,
+      });
+    }
   }
 }
 
@@ -243,6 +306,7 @@ onmessage = async (e) => {
   } else if (e?.data?.type === GET_STOP_ROUTES) {
     const results = [];
     const { stopid } = e?.data?.variables;
+
     let stopcs = [];
     let coor = {};
 
@@ -343,7 +407,9 @@ onmessage = async (e) => {
       type: 'DB_LOADING',
     });
 
-    await clearData(db);
+    // await clearData(db);
+
+    console.log('finish clear; ready to insert');
 
     await fetchInsertBusRoutes(db);
     await fetchInsertRouteStops(db);
@@ -359,15 +425,16 @@ onmessage = async (e) => {
     dataCount(db);
 
   } else if (e?.data?.type === CLEAR_DATA) {
-    clearData(db);
-    
-  } 
+    await clearData(db);
+
+    console.log('finish!');
+  }
 }
 
 const clearData = async (db) => {
   console.log('clearing data: ');
 
-  return Promise.all([
+  const promises = [
     new Promise(resolve => {
       db.exec({
         sql: 'DELETE FROM rstop2;',
@@ -386,7 +453,10 @@ const clearData = async (db) => {
         callback: () => resolve()
       });
     }),
-  ]);
+  ];
+
+  console.log('clear data promises', promises)
+  return Promise.all(promises);
 };
 
 // const dropTables = (db) => {
