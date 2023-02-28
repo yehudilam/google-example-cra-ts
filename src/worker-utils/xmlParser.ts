@@ -1,11 +1,25 @@
 import convert from 'xml-js';
-import convert1980 from './hk1980Wgs';
+import convert1980 from '../utils/hk1980Wgs';
 
 const BUS_ROUTES_XML = 'https://static.data.gov.hk/td/routes-fares-xml/ROUTE_BUS.xml';
 
 interface NameMapType{
   xmlName: string;
   tableColName: string;
+}
+
+export interface BusRoute {
+  routeid: number; 
+  company: string; 
+  routec: string; 
+  route_type: number; 
+  service_mode: string; 
+  company_st: string; 
+  special_type: string; 
+  startc: string; 
+  destinc: string; 
+  fullfare: number; 
+  journey_time: number;
 }
 
 const nameMap: NameMapType[] = [
@@ -74,8 +88,6 @@ const parseRouteData = async () => {
     }, {});
   });
 
-  // console.log('xml parser data', data);
-
   return data;
 };
 
@@ -89,7 +101,7 @@ const parseRouteStopData = async () => {
   const response = await fetch(BUS_ROUTE_STOP_JSON);
   const json = await response.json();
 
-  console.log('route stop json', json);
+  // console.log('route stop json', json);
 
   return json.features.map((feat: any) => {
     const {

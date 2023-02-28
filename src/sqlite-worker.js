@@ -1,4 +1,3 @@
-import { parseRouteData, parseRouteStopData, parseCoorData } from "./utils/xmlParser";
 import {
   // GET_ROUTE_STOPS_COUNT, GET_ROUTES_COUNT, 
   LIST_FILES, FETCH_TRANSPORT_DATA,
@@ -7,6 +6,7 @@ import {
   // GET_COORS_COUNT, DB_LOADING,
   DATA_COUNT_RESULT
 } from './constants/WorkerMessageTypes';
+import { fetchData } from "./worker-utils/fetchData";
 
 console.log('Running demo from Worker thread.');
 
@@ -40,116 +40,6 @@ const logHtml = function (cssClass, ...args) {
 const log = (...args) => logHtml('', ...args);
 // const warn = (...args) => logHtml('warning', ...args);
 const error = (...args) => logHtml('error', ...args);
-
-const extractBusRoute = ({ routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time }) => {
-  return [routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time];
-}
-
-const fetchInsertBusRoutes = async (db) => {
-  const routes = await parseRouteData();
-
-  for (let i = 0; i < routes.length; i = i + 10) {
-    const dataArray = [...Array(10).keys()]
-      .filter(j => (i + j) < routes.length);
-
-    const data = dataArray
-      .reduce((acc, cur) => {
-        return [
-          ...acc,
-          ...extractBusRoute(routes[i + cur])
-        ];
-      }, []);
-
-    db.exec({
-      sql: `
-      insert into busfare3a (routeid, company, routec, route_type, service_mode, company_st, special_type, startc, destinc, fullfare, journey_time) values 
-      ${Array(dataArray.length).fill('(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}
-      `,
-      bind: data,
-    });
-
-    if (i % 100 === 0) {
-      postMessage({
-        type: DB_LOADING_STATE,
-        data: `${i}/${routes.length} routes inserted`,
-      });
-    }
-  }
-};
-
-const extractRouteStop = ({
-  routeid, stopid, stopseq, routedir, stopc
-}) => {
-  return [routeid, stopid, stopseq, routedir, stopc];
-}
-
-const fetchInsertRouteStops = async (db) => {
-  const routeStops = await parseRouteStopData();
-
-  for (let i = 0; i < routeStops.length; i = i + 20) {
-    const dataArray = [...Array(20).keys()]
-      .filter(j => (i + j) < routeStops.length);
-
-    const data = dataArray.reduce((acc, cur) => {
-      return [
-        ...acc,
-        ...extractRouteStop(routeStops[i + cur])
-      ];
-    }, []);
-
-    if (data.length > 0) {
-      db.exec({
-        sql: `
-        insert into rstop2 (routeid, stopid, stopseq, routedir, stopc) values 
-        ${Array(dataArray.length).fill('(?, ?, ?, ?, ?)').join(', ')}
-        `,
-        bind: data,
-      });
-    }
-
-    if (i % 500 === 0) {
-      postMessage({
-        type: DB_LOADING_STATE,
-        data: `${i}/${routeStops.length} stops inserted`,
-      });
-    }
-  }
-}
-
-const extractCoors = ({ stopid, lat, lng }) => {
-  return [stopid, lat, lng];
-}
-
-const fetchInsertCoors = async (db) => {
-  const coors = await parseCoorData();
-
-  for (let i = 0; i < coors.length; i = i + 10) {
-    const dataArray = [...Array(10).keys()]
-      .filter(j => (i + j) < coors.length);
-
-    const data = dataArray.reduce((acc, cur) => {
-      return [
-        ...acc,
-        ...extractCoors(coors[i + cur])
-      ];
-    }, []);
-
-    db.exec({
-      sql: `
-      INSERT INTO coors (stopid, lat, lng) values 
-      ${Array(dataArray.length).fill('(?, ?, ?)').join(', ')}
-      `,
-      bind: data
-    });
-
-    if (i % 100 === 0) {
-      postMessage({
-        type: DB_LOADING_STATE,
-        data: `${i}/${coors.length} stop coordinates inserted`,
-      });
-    }
-  }
-}
 
 let db;
 
@@ -411,9 +301,11 @@ onmessage = async (e) => {
 
     console.log('finish clear; ready to insert');
 
-    await fetchInsertBusRoutes(db);
-    await fetchInsertRouteStops(db);
-    await fetchInsertCoors(db);
+    // await fetchInsertBusRoutes(db);
+    // await fetchInsertRouteStops(db);
+    // await fetchInsertCoors(db);
+
+    await fetchData(db);
 
     postMessage({
       type: 'DB_READY',
