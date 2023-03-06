@@ -1,3 +1,12 @@
+# Example from google: Sqlite WASM
+
+React App communicating with Sqlite3 WASM + OPFS API via a worker.
+Special headers needed for this to work as a WASM
+
+Demo using open public transport data from Hong Kong government transport department
+
+----
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
